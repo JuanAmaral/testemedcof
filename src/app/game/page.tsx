@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Card from "./card";
+import { shuffleArray } from "@/utils/shuffle";
 
 const initialCards = ["🍕", "🍔", "🍣", "🍩", "🍦", "🍇"];
 const shuffledCards = [...initialCards, ...initialCards].sort(
@@ -52,9 +53,7 @@ export default function GamePage() {
   };
 
   const resetGame = () => {
-    const shuffled = [...initialCards, ...initialCards].sort(
-      () => Math.random() - 0.5
-    );
+    const shuffled = shuffleArray([...initialCards, ...initialCards]);
     setCards(shuffled);
     setFlipped([]);
     setMatched([]);
@@ -62,7 +61,6 @@ export default function GamePage() {
     setStartTime(null);
     setGameOver(false);
   };
-
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
       <h1 className="text-3xl font-bold mb-4">Memory Game</h1>
