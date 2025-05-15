@@ -4,85 +4,93 @@ import { useEffect, useState } from "react";
 import Card from "./card";
 import { shuffleArray } from "@/utils/shuffle";
 
-const initialCards = ["🍕", "🍔", "🍣", "🍩", "🍦", "🍇"];
-const shuffledCards = [...initialCards, ...initialCards].sort(
-  () => Math.random() - 0.5
-);
+const items = ["🍕", "🍔", "🍣", "🍩", "🍦", "🍇"];
 
 export default function GamePage() {
-  const [cards, setCards] = useState(shuffledCards);
-  const [flipped, setFlipped] = useState<number[]>([]);
-  const [matched, setMatched] = useState<number[]>([]);
-  const [startTime, setStartTime] = useState<number | null>(null);
-  const [time, setTime] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
+  const [cards, setCards] = useState<string[]>([]);
+  const [flip, setFlip] = useState<any>([]);
+  const [correct, setCorrect] = useState<any>([]);
+  const [tempo, setTempo] = useState(0);
+  const [clock, setClock] = useState<any>();
+  const [start, setStart] = useState(false);
+  const [status, setStatus] = useState("running");
+  const newCards = shuffleArray([...items, ...items]);
 
   useEffect(() => {
-    if (flipped.length === 2) {
-      const [first, second] = flipped;
-      if (cards[first] === cards[second]) {
-        setMatched((prev) => [...prev, first, second]);
+    if (cards.length === 0) {
+      setCards(newCards);
+    }
+  }, [cards]);
+
+  useEffect(() => {
+    if (flip.length === 2) {
+      const [a, b] = flip;
+      if (cards[a] === cards[b]) {
+        setCorrect((prev: any) => [...prev, a, b]);
       }
-      setTimeout(() => setFlipped([]), 1000);
+      setTimeout(() => {
+        setFlip([]);
+      }, 1000);
     }
-  }, [flipped]);
+  }, [flip]);
 
   useEffect(() => {
-    if (matched.length === cards.length && cards.length > 0) {
-      setGameOver(true);
+    if (start) {
+      const id = setInterval(() => {
+        setTempo((t: number) => t + 1);
+      }, 1000);
+      setClock(id);
     }
-  }, [matched]);
+
+    return () => clearInterval(clock);
+  }, [start]);
 
   useEffect(() => {
-    if (!startTime) return;
-    const interval = setInterval(() => {
-      setTime(Math.floor((Date.now() - startTime) / 1000));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [startTime]);
+    if (correct.length === cards.length && cards.length > 0) {
+      setStatus("done");
+    }
+  }, [correct]);
 
-  const handleClick = (index: number) => {
-    if (
-      flipped.length < 2 &&
-      !flipped.includes(index) &&
-      !matched.includes(index)
-    ) {
-      setFlipped((prev) => [...prev, index]);
-      if (!startTime) setStartTime(Date.now());
+  const handleClick = (idx: number) => {
+    if (!start) setStart(true);
+    if (flip.length < 2 && !flip.includes(idx) && !correct.includes(idx)) {
+      setFlip([...flip, idx]);
     }
   };
 
-  const resetGame = () => {
-    const shuffled = shuffleArray([...initialCards, ...initialCards]);
-    setCards(shuffled);
-    setFlipped([]);
-    setMatched([]);
-    setTime(0);
-    setStartTime(null);
-    setGameOver(false);
+  const restart = () => {
+    setCards(shuffleArray([...items, ...items]));
+    setFlip([]);
+    setCorrect([]);
+    setTempo(0);
+    setStatus("running");
+    setStart(false);
   };
+
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
-      <h1 className="text-3xl font-bold mb-4">Memory Game</h1>
-      <p className="mb-2">⏱️ Tempo: {time}s</p>
+      <h1 className="text-3xl font-bold mb-4">Jogo da Memória</h1>
+      <p className="mb-2">⏱️ Tempo: {tempo}s</p>
+
       <div className="grid grid-cols-4 gap-4">
-        {cards.map((card, index) => (
+        {cards.map((item, i) => (
           <Card
-            key={index}
-            content={card}
-            isFlipped={flipped.includes(index) || matched.includes(index)}
-            onClick={() => handleClick(index)}
+            key={Math.random()}
+            content={item}
+            isFlipped={flip.includes(i) || correct.includes(i)}
+            onClick={() => handleClick(i)}
           />
         ))}
       </div>
-      {gameOver && (
+
+      {status === "done" && (
         <div className="mt-4 text-center">
-          <p className="text-xl font-semibold">🎉 Você venceu em {time}s!</p>
+          <p className="text-xl font-semibold">🎉 Você terminou em {tempo}s!</p>
           <button
-            onClick={resetGame}
+            onClick={restart}
             className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
-            Jogar Novamente
+            Reiniciar
           </button>
         </div>
       )}
