@@ -25,7 +25,7 @@ export class Ranking {
     static instance: Ranking;
 
     constructor() {
-        this.api = new Api('https://memory-game-5x7j.onrender.com/rankings');
+        this.api = new Api();
     }
 
     static getInstance() {
@@ -36,9 +36,7 @@ export class Ranking {
     }
 
     async getRanking(page: number = 1, limit: number = 10): Promise<IRankingResponse> {
-        
-        const ranking = await this.api.get({ page, limit });
-        
+        const ranking = await this.api.get("/rankings",{ page, limit });
         return ranking;
     }
 }

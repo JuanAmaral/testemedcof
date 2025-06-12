@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Card from "./card";
 import { IRankingResponse, Ranking } from "@/gateway/ranking";
+import { Score } from "@/gateway/score";
+import PlayGameComponent from "./_components/play-game";
+import FinishGameComponent from "./_components/finish-game";
 
 const initialCards = ["🍕", "🍔", "🍣", "🍩", "🍦", "🍇"];
 
@@ -109,78 +111,15 @@ export default function GamePage() {
     };
 
     try {
-      const res = await fetch(
-        `https://memory-game-5x7j.onrender.com/api-docs/api/scores`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-      if (!res.ok) {
-        throw new Error("Erro ao enviar score");
-      }
-
+      await Score.getInstance().sendScore(payload);
       console.log("Score enviado com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar score:", error);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
-      <h1 className="text-3xl font-bold mb-4 text-white">Memory Game</h1>
-
-      {!started ? (
-        <div className="flex flex-col items-center gap-4">
-          <input
-            type="text"
-            placeholder="Digite seu nome"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="px-4 py-2 rounded bg-white text-black focus:outline-none"
-          />
-          <button
-            onClick={startGame}
-            disabled={!name.trim()}
-            className={`px-6 py-3 rounded text-white ${
-              name.trim()
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-gray-600 cursor-not-allowed"
-            }`}
-          >
-            Começar Jogo
-          </button>
-        </div>
-      ) : (
-        <>
-          <p className="mb-2 text-white">⏱️ Tempo: {time}s</p>
-          <div className="grid grid-cols-4 gap-4">
-            {cards.map((card, index) => (
-              <Card
-                key={index}
-                content={card}
-                isFlipped={flipped.includes(index) || matched.includes(index)}
-                onClick={() => handleClick(index)}
-              />
-            ))}
-          </div>
-          {gameOver && (
-            <div className="mt-4 text-center">
-              <p className="text-xl font-semibold text-white">
-                🎉 {name}, você venceu em {time}s!
-              </p>
-
-              <button
-                onClick={resetGame}
-                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Jogar Novamente
-              </button>
-            </div>
-          )}
-        </>
-      )}
+  function RankingComponent() {
+    return (
       <div className="flex flex-row items-center justify-center gap-20">
         <button
           onClick={paginationLeft}
@@ -206,6 +145,33 @@ export default function GamePage() {
           Right
         </button>
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
+      <h1 className="text-3xl font-bold mb-4 text-white">Memory Game</h1>
+
+      {!started ? (
+        <PlayGameComponent
+          name={name}
+          setName={setName}
+          startGame={startGame}
+        />
+      ) : (
+        <FinishGameComponent
+          cards={cards}
+          flipped={flipped}
+          matched={matched}
+          time={time}
+          gameOver={gameOver}
+          name={name}
+          resetGame={resetGame}
+          handleClick={handleClick}
+        />
+      )}
+
+      {gameOver && <RankingComponent />}
     </div>
   );
 }
