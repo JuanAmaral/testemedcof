@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Card from "./card";
+import { IRankingResponse, Ranking } from "@/gateway/ranking";
 
 const initialCards = ["🍕", "🍔", "🍣", "🍩", "🍦", "🍇"];
 
@@ -14,6 +15,7 @@ export default function GamePage() {
   const [gameOver, setGameOver] = useState(false);
   const [started, setStarted] = useState(false);
   const [name, setName] = useState("");
+  const [ranking, setRanking] = useState<IRankingResponse | null>(null);
 
   const startGame = () => {
     const shuffled = [...initialCards, ...initialCards].sort(
@@ -29,6 +31,10 @@ export default function GamePage() {
   };
 
   useEffect(() => {
+    getRanking();
+  }, []);
+
+  useEffect(() => {
     if (flipped.length === 2) {
       const [first, second] = flipped;
       if (cards[first] === cards[second]) {
@@ -42,7 +48,6 @@ export default function GamePage() {
     if (matched.length === cards.length && cards.length > 0) {
       setGameOver(true);
       setStartTime(null);
-
       sendScore();
     }
   }, [matched]);
@@ -65,6 +70,23 @@ export default function GamePage() {
     }
   };
 
+  async function getRanking(page: number = 1) {
+    const _ranking = await Ranking.getInstance().getRanking(page);
+
+    _ranking.rankings.sort((a, b) => b.score - a.score);
+
+    setRanking(_ranking);
+  }
+
+  function paginationLeft() {
+    if (ranking?.pagination.page === 1) return;
+    getRanking(ranking!.pagination.page - 1);
+  }
+
+  function paginationRight() {
+    if (!ranking?.pagination.hasMore) return;
+    getRanking(ranking?.pagination.page + 1);
+  }
   const resetGame = () => {
     setStarted(false);
     setCards([]);
@@ -148,6 +170,7 @@ export default function GamePage() {
               <p className="text-xl font-semibold text-white">
                 🎉 {name}, você venceu em {time}s!
               </p>
+
               <button
                 onClick={resetGame}
                 className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -158,6 +181,31 @@ export default function GamePage() {
           )}
         </>
       )}
+      <div className="flex flex-row items-center justify-center gap-20">
+        <button
+          onClick={paginationLeft}
+          className="text-white px-4 py-2 border border-white rounded-md disabled:opacity-50"
+          disabled={ranking?.pagination.page === 1}
+        >
+          Left
+        </button>
+        <div className="flex flex-col  items-start justify-start gap-2 mt-4">
+          <h2 className="text-xl font-semibold text-white">Ranking</h2>
+
+          {ranking?.rankings.map((ranking) => (
+            <span key={ranking.createdAt}>
+              {ranking.name} - {ranking.score}
+            </span>
+          ))}
+        </div>
+        <button
+          onClick={paginationRight}
+          className="text-white px-4 py-2 border border-white rounded-md disabled:opacity-50"
+          disabled={!ranking?.pagination.hasMore}
+        >
+          Right
+        </button>
+      </div>
     </div>
   );
 }
