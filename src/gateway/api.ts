@@ -22,7 +22,6 @@ export class Api<T> implements IApi<T> {
             Object.entries(filters).forEach(([key, value]) => {
                 query.set(key, value as string);
             });
-            console.log({ query: query.toString() });
             uri = `${uri}?${query.toString()}`;
         }
         
