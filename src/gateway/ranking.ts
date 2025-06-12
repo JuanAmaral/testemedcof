@@ -36,9 +36,9 @@ export class Ranking {
     }
 
     async getRanking(page: number = 1, limit: number = 10): Promise<IRankingResponse> {
-        console.log({ page, limit });
+        
         const ranking = await this.api.get({ page, limit });
-        console.log({ ranking });
+        
         return ranking;
     }
 }
