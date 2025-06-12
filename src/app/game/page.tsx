@@ -41,6 +41,8 @@ export default function GamePage() {
   useEffect(() => {
     if (matched.length === cards.length && cards.length > 0) {
       setGameOver(true);
+      setStartTime(null);
+
       sendScore();
     }
   }, [matched]);
@@ -93,7 +95,6 @@ export default function GamePage() {
           body: JSON.stringify(payload),
         }
       );
-      console.log(res);
       if (!res.ok) {
         throw new Error("Erro ao enviar score");
       }
